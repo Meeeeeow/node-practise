@@ -3,6 +3,7 @@
     "lodash": "^4.17.21"
   },
   "scripts":{
-    "start": "nodemon index"
+    "start": "NODE_ENV=staging nodemon index",
+    "production": "NODE_ENV=production nodemon index" 
   }
 }
