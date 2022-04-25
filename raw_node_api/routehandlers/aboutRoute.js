@@ -1,10 +1,9 @@
 const handler={};
 
-handler.aboutHandler =(requestProps,realData,callback)=>{
+handler.aboutHandler =(requestProps,callback)=>{
     console.log(requestProps);
-    console.log(realData);
     callback(200,{
-        message:"This is about page." + realData
+        message:"This is about page."
     })
 }
 

@@ -3,6 +3,7 @@ const url = require('url');
 const {StringDecoder} = require('string_decoder');
 const {notFoundHandler} = require('../routehandlers/notFoundRouter');
 const routes =require('../routes');
+const {parseJSON} = require('./utilities');
 const handler ={};
 
 handler.handleReqRes = (req,res) =>{
@@ -29,8 +30,8 @@ handler.handleReqRes = (req,res) =>{
         queryObjStr,
         headers
     }
-    console.log(routes['sample']);
-    const chosenHandler = routes[trimmedPath] ? routes[trimmedPath] : notFoundHandler;
+    console.log('I ams' +routes[trimmedPath]);
+    let chosenHandler = routes[trimmedPath] ? routes[trimmedPath] : notFoundHandler;
     console.log(chosenHandler);
    
     req.on('data',(buffer)=>{
@@ -40,13 +41,16 @@ handler.handleReqRes = (req,res) =>{
     req.on('end',()=>{
         realData += decoder.end();
         console.log("I am " + realData);
-        chosenHandler(requestProps,realData,(statusCode,payload)=>{
+        requestProps.body = parseJSON(realData);
+        chosenHandler(requestProps,(statusCode,payload)=>{
             
             statusCode = typeof(statusCode) === "number" ? statusCode : 500;
             payload = typeof(payload) === "object" ? payload : {};
     
             const payloadStr  = JSON.stringify(payload);
-     
+            
+
+            res.setHeader("Content-Type","application/json");
             res.writeHead(statusCode);
             res.end(payloadStr );
         });

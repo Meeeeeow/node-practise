@@ -4,12 +4,14 @@ const environments = {};
 //environments objects
 environments.staging={
     port:3000,
-    envName : "staging"
+    envName : "staging",
+    secretKey:'asasdadsdadas',
 }
 
 environments.production ={
     port:5000,
-    envName: "production"
+    envName: "production",
+    secretKey:'dgfghfhfhfghfh',
 }
 
 //check for which environment has come from terminal
