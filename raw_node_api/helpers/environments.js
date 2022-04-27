@@ -6,14 +6,14 @@ environments.staging={
     port:3000,
     envName : "staging",
     secretKey:'asasdadsdadas',
-    maxChecks: 5,
+    maxChecks: 10,
 }
 
 environments.production ={
     port:5000,
     envName: "production",
     secretKey:'dgfghfhfhfghfh',
-    maxChecks: 5,
+    maxChecks: 10,
 }
 
 //check for which environment has come from terminal

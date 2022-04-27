@@ -22,7 +22,38 @@ handler.checkHandler =(requestProps,callback)=>{
 handler._check ={};
 
 handler._check.get = (requestProps,callback)=>{
-   
+   const id = typeof(requestProps.queryObjStr.id) === "string" && requestProps.queryObjStr.id.trim().length === 20 ? requestProps.queryObjStr.id : false;
+
+   if(id)
+   {
+        data.read('checks',id,(err,checkData)=>{
+            if(!err && checkData){
+                const checkObj = parseJSON(checkData);
+                const token = typeof(requestProps.headers.token) === "string" && requestProps.headers.token.trim().length === 20 ? requestProps.headers.token : false;
+
+                tokenHandler._token.verify(token,checkObj.phone,(tokenIsValid)=>{
+                    if(tokenIsValid)
+                    {
+                        callback(200,checkObj);
+                    }else{
+                        callback(401,{
+                            error:"Unauthorized access!"
+                        })
+                    }
+                })
+            }else{
+                callback(500,{
+                    error:"Error reading file."
+                })
+            }
+
+
+        })
+   }else{
+       callback(400,{
+           error:"Wrong id given!"
+       })
+   }
 }
 
 handler._check.post =(requestProps,callback)=>{
@@ -123,11 +154,158 @@ handler._check.post =(requestProps,callback)=>{
 }
 
 handler._check.put = (requestProps,callback)=>{
-   
+    const id = typeof(requestProps.body.id) === "string" && requestProps.body.id.trim().length === 20 ? requestProps.body.id : false;
+
+    let protocol = typeof(requestProps.body.protocol) === "string" && ['http','https'].includes(requestProps.body.protocol) ? requestProps.body.protocol : false;
+
+    let url = typeof(requestProps.body.url) === "string" && requestProps.body.url.trim().length > 0 ? requestProps.body.url : false;
+
+    let method = typeof(requestProps.body.method) === "string" && ['GET','POST','PUT','DELETE'].includes(requestProps.body.method) ? requestProps.body.method : false;
+
+    let successCodes = typeof(requestProps.body.successCodes) === "object" && requestProps.body.successCodes instanceof Array ? requestProps.body.successCodes : false;
+
+    let timeoutSeconds = typeof(requestProps.body.timeoutSeconds) === "number" && requestProps.body.timeoutSeconds % 1 === 0 && requestProps.body.timeoutSeconds >= 1 && requestProps.body.timeoutSeconds <= 5 ? requestProps.body.timeoutSeconds : false;
+
+    if(id)
+    {
+        if(protocol || url || method || successCodes || timeoutSeconds)
+        {
+            data.read('checks',id,(err,checkData)=>{
+                if(!err && checkData)
+                {
+                    const checkObj = parseJSON(checkData);
+                    const token = typeof(requestProps.headers.token) === "string" && requestProps.headers.token.trim().length === 20 ? requestProps.headers.token : false;
+                    tokenHandler._token.verify(token,checkObj.phone,(tokenIsValid)=>{
+                        if(tokenIsValid)
+                        {
+                            if(protocol)
+                            {
+                                checkObj.protocol = protocol;
+                            }
+                            if(url)
+                            {
+                                checkObj.url = url;
+                            }
+                            if(method)
+                            {
+                                checkObj.method = method;
+                            }
+                            if(successCodes)
+                            {
+                                checkObj.successCodes = successCodes;
+                            }
+                            if(timeoutSeconds)
+                            {
+                                checkObj.timeoutSeconds = timeoutSeconds;
+                            }
+
+                            //update
+                            data.update('checks',id,checkObj,(err)=>{
+                                if(!err)
+                                {
+                                    callback(200,{
+                                        message:"Link updated successfully"
+                                    })
+                                }else{
+                                    callback(500,{
+                                        error:"Error updating file!"
+                                    })
+                                }
+                            })
+                        }else{
+                            callback(401,{
+                                error:"Unauthorized Access!"
+                            })
+                        }
+                    })    
+                }else{
+                    callback(500,{
+                        error: "Error reading file!"
+                    })
+                }
+            })
+        }else{
+            callback(400,{
+                error:"You have to fill out at least one field to continue to update!"
+            })
+        }
+    }else{
+        callback(400,{
+            error:"Wrong id given!"
+        })
+    }
 }
 
 handler._check.delete = (requestProps,callback)=>{
-    
+    const id = typeof(requestProps.queryObjStr.id) === "string" && requestProps.queryObjStr.id.trim().length === 20 ? requestProps.queryObjStr.id : false;
+
+    if(id)
+    {
+         data.read('checks',id,(err,checkData)=>{
+             if(!err && checkData){
+                 const checkObj = parseJSON(checkData);
+                 const token = typeof(requestProps.headers.token) === "string" && requestProps.headers.token.trim().length === 20 ? requestProps.headers.token : false;
+ 
+                 tokenHandler._token.verify(token,checkObj.phone,(tokenIsValid)=>{
+                     if(tokenIsValid)
+                     {
+                        data.delete('checks',id,(err)=>{
+                            if(!err)
+                            {
+                                data.read('test',checkObj.phone,(err,userData)=>{
+                                    if(!err && userData)
+                                    {
+                                        const userObj = parseJSON(userData);
+                                        let userChecks = typeof(userObj.checks) === "object" && userObj.checks instanceof Array ? userObj.checks : [];
+
+                                        userObj.checks = userChecks.filter(checkId => checkId !== id);
+
+                                        //update
+
+                                        data.update('test',userObj.phone,userObj,(err)=>{
+                                            if(!err)
+                                            {
+                                                callback(200,{
+                                                    message:"Link deleted successfully!"
+                                                })
+                                            }else{
+                                                callback(500,{
+                                                    error:"Error updaing file!"
+                                                })
+                                            }
+                                        })
+                                    }else{
+                                        callback(500,{
+                                            error:"Error reading file!"
+                                        })
+                                    }
+                                })
+                            }else{
+                                callback(500,{
+                                    error:"Error deleting file!"
+                                })
+                            }
+                        })
+                     }else{
+                         callback(401,{
+                             error:"Unauthorized access!"
+                         })
+                     }
+                 })
+             }else{
+                 callback(500,{
+                     error:"Error reading file."
+                 })
+             }
+ 
+ 
+         })
+    }else{
+        callback(400,{
+            error:"Wrong id given!"
+        })
+    }
+   
 }
 
 module.exports = handler;
